@@ -85,6 +85,14 @@ resource "aws_security_group" "vpn_test_openvpn_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "Allow OpenVPN Admin UI access"
+    from_port   = 943
+    to_port     = 943
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
