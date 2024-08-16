@@ -15,10 +15,10 @@ resource "aws_vpc" "vpn_test_vpc" {
 
 # Public subnet for VPN server
 resource "aws_subnet" "vpn_test_public_subnet" {
-  vpc_id            = aws_vpc.vpn_test_vpc.id
-  cidr_block        = "10.0.1.0/24"
+  vpc_id                  = aws_vpc.vpn_test_vpc.id
+  cidr_block              = "10.0.1.0/24"
   map_public_ip_on_launch = true
-  availability_zone = "us-east-1a"
+  availability_zone       = "us-east-1a"
 
   tags = {
     Name = "VPN-Test-Public-Subnet"
@@ -65,7 +65,7 @@ resource "aws_route_table_association" "vpn_test_public_route_table_assoc" {
   route_table_id = aws_route_table.vpn_test_public_route_table.id
 }
 
-# Security Group for VPN Server (You will create the EC2 instance manually)
+# Security Group for VPN Server
 resource "aws_security_group" "vpn_test_openvpn_sg" {
   vpc_id = aws_vpc.vpn_test_vpc.id
 
@@ -111,22 +111,46 @@ resource "aws_route_table_association" "vpn_test_private_route_table_assoc" {
   route_table_id = aws_route_table.vpn_test_private_route_table.id
 }
 
+# EC2 Instance for OpenVPN Server (Using Free Tier Instance Type t2.micro)
+resource "aws_instance" "vpn_test_openvpn_instance" {
+  ami                         = "ami-02612c926201def10"  # OpenVPN Access Server Community Image
+  instance_type               = "t2.micro"               # Free tier eligible instance
+  subnet_id                   = aws_subnet.vpn_test_public_subnet.id
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.vpn_test_openvpn_sg.id]  # Referencing the SG by ID
+
+  tags = {
+    Name = "VPN-Test-OpenVPN-Server"
+  }
+}
+
+
 output "vpn_test_vpc_id" {
-  value = aws_vpc.vpn_test_vpc.id
+  value       = aws_vpc.vpn_test_vpc.id
   description = "The ID of the VPC for the VPN test."
 }
 
 output "vpn_test_public_subnet_id" {
-  value = aws_subnet.vpn_test_public_subnet.id
+  value       = aws_subnet.vpn_test_public_subnet.id
   description = "The ID of the public subnet for the VPN test."
 }
 
 output "vpn_test_private_subnet_id" {
-  value = aws_subnet.vpn_test_private_subnet.id
+  value       = aws_subnet.vpn_test_private_subnet.id
   description = "The ID of the private subnet for the VPN test."
 }
 
 output "vpn_test_security_group_id" {
-  value = aws_security_group.vpn_test_openvpn_sg.id
+  value       = aws_security_group.vpn_test_openvpn_sg.id
   description = "The ID of the security group for the OpenVPN server."
+}
+
+output "vpn_test_openvpn_instance_public_ip" {
+  value       = aws_instance.vpn_test_openvpn_instance.public_ip
+  description = "The public IP address of the OpenVPN server."
+}
+
+output "vpn_test_openvpn_instance_id" {
+  value       = aws_instance.vpn_test_openvpn_instance.id
+  description = "The ID of the OpenVPN EC2 instance."
 }
