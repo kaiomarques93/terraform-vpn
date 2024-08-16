@@ -121,17 +121,29 @@ resource "aws_route_table_association" "vpn_test_private_route_table_assoc" {
 
 # EC2 Instance for OpenVPN Server (Using Free Tier Instance Type t2.micro)
 resource "aws_instance" "vpn_test_openvpn_instance" {
-  ami                         = "ami-02612c926201def10"  # OpenVPN Access Server Community Image
-  instance_type               = "t2.micro"               # Free tier eligible instance
+  ami                         = "ami-02612c926201def10" # OpenVPN Access Server Community Image
+  instance_type               = "t2.micro"              # Free tier eligible instance
   subnet_id                   = aws_subnet.vpn_test_public_subnet.id
   associate_public_ip_address = true
-  vpc_security_group_ids      = [aws_security_group.vpn_test_openvpn_sg.id]  # Referencing the SG by ID
+  vpc_security_group_ids      = [aws_security_group.vpn_test_openvpn_sg.id] # Referencing the SG by ID
 
   tags = {
     Name = "VPN-Test-OpenVPN-Server"
   }
 }
 
+# EC2 Instance in Private Subnet for Testing
+resource "aws_instance" "vpn_test_private_instance" {
+  ami                         = "ami-0ae8f15ae66fe8cda" # Amazon Linux 2023
+  instance_type               = "t2.micro"              # Free tier eligible instance
+  subnet_id                   = aws_subnet.vpn_test_private_subnet.id
+  associate_public_ip_address = false                                       # No public IP
+  vpc_security_group_ids      = [aws_security_group.vpn_test_openvpn_sg.id] # Use the same security group for simplicity
+
+  tags = {
+    Name = "VPN-Test-Private-Instance"
+  }
+}
 
 output "vpn_test_vpc_id" {
   value       = aws_vpc.vpn_test_vpc.id
@@ -161,4 +173,9 @@ output "vpn_test_openvpn_instance_public_ip" {
 output "vpn_test_openvpn_instance_id" {
   value       = aws_instance.vpn_test_openvpn_instance.id
   description = "The ID of the OpenVPN EC2 instance."
+}
+
+output "vpn_test_private_instance_id" {
+  value       = aws_instance.vpn_test_private_instance.id
+  description = "The ID of the private EC2 instance."
 }
